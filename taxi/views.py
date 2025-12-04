@@ -40,10 +40,19 @@ class ManufacturerListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ManufacturerListView, self).get_context_data(**kwargs)
-        search_field_name_manufacturer = self.request.GET.get("search_field_name_manufacturer", "")
-        context["search_field_name_manufacturer"] = search_field_name_manufacturer
+        search_field_name_manufacturer = (self.request.GET.get(
+            "search_field_name_manufacturer",
+            "")
+        )
+        context["search_field_name_manufacturer"] = (
+            search_field_name_manufacturer
+        )
         context["search_form"] = ManufacturerSearchForm(
-            initial={"search_field_name_manufacturer": search_field_name_manufacturer}
+            initial={
+                "search_field_name_manufacturer": (
+                    search_field_name_manufacturer
+                )
+            }
         )
         return context
 
@@ -52,7 +61,8 @@ class ManufacturerListView(LoginRequiredMixin, generic.ListView):
         form = ManufacturerSearchForm(self.request.GET)
         if form.is_valid():
             return queryset.filter(
-                name__icontains=form.cleaned_data["search_field_name_manufacturer"]
+                name__icontains=form
+                .cleaned_data["search_field_name_manufacturer"]
             )
         return queryset
 
@@ -124,7 +134,8 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(DriverListView, self).get_context_data(**kwargs)
-        search_field_name_driver = self.request.GET.get("search_field_name_driver", "")
+        search_field_name_driver = (self.request.GET
+                                    .get("search_field_name_driver", ""))
         context["search_field_name_driver"] = search_field_name_driver
         context["search_form"] = DriverSearchForm(
             initial={"search_field_name_driver": search_field_name_driver}
@@ -136,7 +147,8 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
         form = DriverSearchForm(self.request.GET)
         if form.is_valid():
             return queryset.filter(
-                username__icontains=form.cleaned_data["search_field_name_driver"]
+                username__icontains=form
+                .cleaned_data["search_field_name_driver"]
             )
         return queryset
 
