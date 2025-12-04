@@ -90,10 +90,10 @@ class CarListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(CarListView, self).get_context_data(**kwargs)
-        search_field_name_car = self.request.GET.get("model_name", "")
-        context["search_field_name_car"] = search_field_name_car
+        search_field_car_model = self.request.GET.get("search_field_car_model", "")
+        context["search_field_car_model"] = search_field_car_model
         context["search_form"] = CarSearchForm(
-            initial={"search_field_name_car": search_field_name_car}
+            initial={"search_field_car_model": search_field_car_model}
         )
         return context
 
@@ -102,7 +102,7 @@ class CarListView(LoginRequiredMixin, generic.ListView):
         form = CarSearchForm(self.request.GET)
         if form.is_valid():
             return queryset.filter(
-                model__icontains=form.cleaned_data["search_field_name_car"]
+                model__icontains=form.cleaned_data["search_field_car_model"]
             )
         return queryset
 

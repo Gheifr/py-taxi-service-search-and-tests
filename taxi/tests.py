@@ -44,8 +44,18 @@ class TaxiTests(TestCase):
             country="Austria",
         )
 
+        self.manufacturer2 = Manufacturer.objects.create(
+            name="BYD",
+            country="China",
+        )
+
         self.car1 = Car.objects.create(
             model="A6",
+            manufacturer=self.manufacturer1,
+        )
+
+        self.car2 = Car.objects.create(
+            model="A5",
             manufacturer=self.manufacturer1,
         )
 
@@ -104,13 +114,14 @@ class TaxiTests(TestCase):
     def test_car_list_search_is_case_insensitive(self):
         response = self.client.get(
             reverse("taxi:car-list"),
-            {"search_field_name_car": "5"}
+            {"search_field_car_model": "a6"}
         )
 
         self.assertEqual(response.status_code, 200)
         car_list = response.context["car_list"]
 
-        self.assertNotIn(self.car1, car_list)
+        self.assertIn(self.car1, car_list)
+        self.assertNotIn(self.car2, car_list)
 
     def test_manufacturer_list_search_is_case_insensitive(self):
         response = self.client.get(
@@ -122,3 +133,4 @@ class TaxiTests(TestCase):
         manufacturer_list = response.context["manufacturer_list"]
 
         self.assertIn(self.manufacturer1, manufacturer_list)
+        self.assertNotIn(self.manufacturer2, manufacturer_list)
