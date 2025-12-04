@@ -1,15 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
-from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import Driver, Car, Manufacturer
 from .forms import (DriverCreationForm, DriverLicenseUpdateForm,
                     CarForm, ManufacturerSearchForm,
                     DriverSearchForm, CarSearchForm)
+from .models import Driver, Car, Manufacturer
 
 
 @login_required
@@ -40,18 +40,20 @@ class ManufacturerListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ManufacturerListView, self).get_context_data(**kwargs)
-        model_name = self.request.GET.get("model_name", "")
-        context["model_name"] = model_name
-        context["search_form"] = CarSearchForm(
-            initial={"model_name": model_name}
+        search_field_name_manufacturer = self.request.GET.get("search_field_name_manufacturer", "")
+        context["search_field_name_manufacturer"] = search_field_name_manufacturer
+        context["search_form"] = ManufacturerSearchForm(
+            initial={"search_field_name_manufacturer": search_field_name_manufacturer}
         )
         return context
 
     def get_queryset(self):
         queryset = Manufacturer.objects.all()
-        form = CarSearchForm(self.request.GET)
+        form = ManufacturerSearchForm(self.request.GET)
         if form.is_valid():
-            return queryset.filter(name__icontains=form.cleaned_data["model_name"])
+            return queryset.filter(
+                name__icontains=form.cleaned_data["search_field_name_manufacturer"]
+            )
         return queryset
 
 
@@ -78,19 +80,22 @@ class CarListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(CarListView, self).get_context_data(**kwargs)
-        model_name = self.request.GET.get("model_name", "")
-        context["model_name"] = model_name
-        context["search_form"] = ManufacturerSearchForm(
-            initial={"model_name": model_name}
+        search_field_name_car = self.request.GET.get("model_name", "")
+        context["search_field_name_car"] = search_field_name_car
+        context["search_form"] = CarSearchForm(
+            initial={"search_field_name_car": search_field_name_car}
         )
         return context
 
     def get_queryset(self):
         queryset = Car.objects.select_related("manufacturer")
-        form = ManufacturerSearchForm(self.request.GET)
+        form = CarSearchForm(self.request.GET)
         if form.is_valid():
-            return queryset.filter(model__icontains=form.cleaned_data["model_name"])
+            return queryset.filter(
+                model__icontains=form.cleaned_data["search_field_name_car"]
+            )
         return queryset
+
 
 class CarDetailView(LoginRequiredMixin, generic.DetailView):
     model = Car
@@ -119,10 +124,10 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(DriverListView, self).get_context_data(**kwargs)
-        model_name = self.request.GET.get("model_name", "")
-        context["model_name"] = model_name
+        search_field_name_driver = self.request.GET.get("search_field_name_driver", "")
+        context["search_field_name_driver"] = search_field_name_driver
         context["search_form"] = DriverSearchForm(
-            initial={"model_name": model_name}
+            initial={"search_field_name_driver": search_field_name_driver}
         )
         return context
 
@@ -130,8 +135,11 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
         queryset = get_user_model().objects.all()
         form = DriverSearchForm(self.request.GET)
         if form.is_valid():
-            return queryset.filter(username__icontains=form.cleaned_data["model_name"])
+            return queryset.filter(
+                username__icontains=form.cleaned_data["search_field_name_driver"]
+            )
         return queryset
+
 
 class DriverDetailView(LoginRequiredMixin, generic.DetailView):
     model = Driver
@@ -158,7 +166,7 @@ class DriverDeleteView(LoginRequiredMixin, generic.DeleteView):
 def toggle_assign_to_car(request, pk):
     driver = Driver.objects.get(id=request.user.id)
     if (
-        Car.objects.get(id=pk) in driver.cars.all()
+            Car.objects.get(id=pk) in driver.cars.all()
     ):  # probably could check if car exists
         driver.cars.remove(pk)
     else:

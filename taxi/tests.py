@@ -2,12 +2,13 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from taxi.models import Car, Manufacturer
 
-MANUFACTURER_LIST_URL = reverse("taxi:manufacturer-list")
-DRIVER_LIST_URL = reverse("taxi:driver-list")
 CAR_LIST_URL = reverse("taxi:car-list")
 
+
 class TaxiTests(TestCase):
+
     def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="auditor",
@@ -37,11 +38,24 @@ class TaxiTests(TestCase):
             first_name="Bob",
             last_name="Newby",
         )
+
+        self.manufacturer1 = Manufacturer.objects.create(
+            name="Audi",
+            country="Austria",
+        )
+
+        self.car1 = Car.objects.create(
+            model="A6",
+            manufacturer=self.manufacturer1,
+        )
+
         self.client.force_login(self.user)
 
     def test_login(self):
         response = self.client.post(reverse("login"),
-                                    {"username": "auditor", "password": "1qaz2wsx"}, follow=True)
+                                    {"username": "auditor",
+                                     "password": "1qaz2wsx"},
+                                    follow=True)
 
         self.assertTrue(response.context["user"].is_active)
 
@@ -79,10 +93,32 @@ class TaxiTests(TestCase):
     def test_driver_list_search_is_case_insensitive(self):
         response = self.client.get(
             reverse("taxi:driver-list"),
-            {"username": "BILLY"}  # перевіримо icontains
+            {"search_field_name_driver": "BILLY"}
         )
 
         self.assertEqual(response.status_code, 200)
         driver_list = response.context["driver_list"]
 
         self.assertIn(self.driver2, driver_list)
+
+    def test_car_list_search_is_case_insensitive(self):
+        response = self.client.get(
+            reverse("taxi:car-list"),
+            {"search_field_name_car": "5"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        car_list = response.context["car_list"]
+
+        self.assertNotIn(self.car1, car_list)
+
+    def test_manufacturer_list_search_is_case_insensitive(self):
+        response = self.client.get(
+            reverse("taxi:manufacturer-list"),
+            {"search_field_name_manufacturer": "audi"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        manufacturer_list = response.context["manufacturer_list"]
+
+        self.assertIn(self.manufacturer1, manufacturer_list)
