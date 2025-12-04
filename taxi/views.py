@@ -90,7 +90,10 @@ class CarListView(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(CarListView, self).get_context_data(**kwargs)
-        search_field_car_model = self.request.GET.get("search_field_car_model", "")
+        search_field_car_model = self.request.GET.get(
+            "search_field_car_model",
+            ""
+        )
         context["search_field_car_model"] = search_field_car_model
         context["search_form"] = CarSearchForm(
             initial={"search_field_car_model": search_field_car_model}
